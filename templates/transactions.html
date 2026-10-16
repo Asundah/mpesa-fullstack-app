@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction History</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-dark bg-primary">
+        <div class="container">
+            <span class="navbar-brand"><i class="fas fa-list"></i> Transactions</span>
+            <div>
+                <a href="/" class="btn btn-outline-light btn-sm">Pay</a>
+                <a href="/dashboard" class="btn btn-outline-light btn-sm">Dashboard</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container mt-4">
+        <div class="card">
+            <div class="card-header">
+                <h4>All Transactions</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Phone</th>
+                                <th>Amount</th>
+                                <th>Reference</th>
+                                <th>Receipt</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionBody">
+                            <tr><td colspan="7" class="text-center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+    <script>
+        fetch('/api/transactions')
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('transactionBody');
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center">No transactions yet</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.map(t => `
+                    <tr>
+                        <td>${t.id}</td>
+                        <td>${t.phone_number}</td>
+                        <td>KES ${t.amount}</td>
+                        <td>${t.account_reference}</td>
+                        <td>${t.mpesa_receipt || '-'}</td>
+                        <td>
+                            <span class="badge bg-${t.status === 'success' ? 'success' : t.status === 'failed' ? 'danger' : 'warning'}">
+                                ${t.status}
+                            </span>
+                        </td>
+                        <td>${new Date(t.created_at).toLocaleString()}</td>
+                    </tr>
+                `).join('');
+            });
+        
+        // Auto-refresh every 5 seconds
+        setInterval(() => location.reload(), 5000);
+    </script>
+</body>
+</html>
