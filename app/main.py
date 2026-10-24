@@ -15,8 +15,8 @@ models.Base.metadata.create_all(bind=database.engine)
 app = FastAPI(title="MPESA Full-Stack App")
 
 # Mount static files and templates
-app.mount("/static", StaticFiles(directory="/static"), name="static")
-templates = Jinja2Templates(directory="/templates")
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
 
 # M-Pesa API
 mpesa = MpesaAPI()
@@ -24,15 +24,15 @@ mpesa = MpesaAPI()
 # HTML ROUTES
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request, "index.html")
 
 @app.get("/transactions", response_class=HTMLResponse)
 async def transactions_page(request: Request):
-    return templates.TemplateResponse("transactions.html", {"request": request})
+    return templates.TemplateResponse(request, "transactions.html")
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard_page(request: Request):
-    return templates.TemplateResponse("/dashboard.html", {"request": request})
+    return templates.TemplateResponse(request, "dashboard.html")
 
 # API ROUTES
 @app.post("/api/initiate-payment", response_model=schemas.PaymentResponse)
@@ -125,11 +125,11 @@ async def mpesa_callback(request: Request, db: Session = Depends(database.get_db
 async def get_transactions(db:Session = Depends(database.get_db)):
     return db.query(models.Transaction).order_by(models.Transaction.created_at.desc()).all()
 
-@app.get("api/transactions/{transaction_id}", response_model=schemas.TrasactionResponse)
+@app.get("api/transactions/{transaction_id}", response_model=schemas.TransactionResponse)
 async def get_transaction(transaction_id: int, db: Session = Depends(database.get_db)):
     transaction = db.query(models.Transaction).filter(models.Transaction.id == transaction_id).first()
     if not transaction:
-        raise HTTPException(status_code=404 detail="Transaction not found")
+        raise HTTPException(status_code=404, detail="Transaction not found")
     return transaction
 
 @app.get("/api/stats")
